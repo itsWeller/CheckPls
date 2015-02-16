@@ -6,7 +6,8 @@ to make testing just a little bit easier. Saves constant output for offline test
 and throws whitespace, comments, and caution to the wind.
 
 ## Dependencies
-Python 2.6+, diff
+Python 2.6+, diff.
+
 Only tested on OS X / *Nix, but it should work on Windows with some tweaking.
 
 This depends on your code generator having the same logical structure as TRC's. You may 
