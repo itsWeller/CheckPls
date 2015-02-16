@@ -13,10 +13,30 @@ Only tested on OS X / *Nix, but it should work on Windows with some tweaking.
 This depends on your code generator having the same logical structure as TRC's. You may 
 generate perfectly valid and correct assembly and have this script reject you - don't take it personally. 
 
+## Arguements 
+chrisweller at air in ~/Workspace/checkPls on master
+± python checkPls.py -h
+Usage: checkPls.py [options]
+
+Options and Defaults:
+``` sh
+chrisweller at air in ~/Workspace/checkPls on master
+± python checkPls.py -h
+  -h, --help            show this help message and exit
+  -t TEST_DIR, --test-folder=TEST_DIR
+                        directory containing .rc tests
+  -r RC_LOCATION, --rc-location=RC_LOCATION
+                        directory containing RC binary
+  -f                    flag to force regeneration of testrunner_client .s
+                        files
+```
+
+test_dir defaults to './tests/', and 'rc_location' defaults to current working directory.
+
 ## Usage and Sample Output
 ``` sh
 chrisweller at air in ~/Workspace/cse131 on develop!
-± python checkPls.py proj2tests
+± python checkPls.py -t proj2tests
 [assy.rc]: Passed!
 [compy.rc]: Passed!
 [func.rc]: Passed!
