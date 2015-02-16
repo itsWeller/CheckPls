@@ -92,19 +92,20 @@ for rc_file in [test for test in os.listdir(test_dir) if '.rc' in test]:
 
     # Generate testrunner_client's solution files if not already present
     if not(outFile in os.listdir(test_dir)) or options.generate_requested:
-        print '\t' + outFile + ' missing, generating...'
-        if not compile_check(binary_output(['testrunner_client', test_dir]), False): continue
+        print '-- [' + outFile + '] missing, generating...'
+        if not compile_check(binary_output(['testrunner_client', test_dir + rc_file]), False): continue
 
         # Write generated files
         copyfile('rc.s', test_dir + outFile)
-        list2file(test_dir + outFile, sanitize_file(test_dir + outFile))
+        list2file(test_dir + outFile, sanitize_file(test_dir + outFile) + ['\n'])
 
     # Always generate and write user's RC .s files
     if not compile_check(binary_output([rc_location + 'RC', test_dir + rc_file], rc_location), True): continue
-    list2file(rc_location + 'rc.s', sanitize_file(rc_location + 'rc.s'))
+    list2file(rc_location + 'rc.s', sanitize_file(rc_location + 'rc.s') + ['\n'])
 
     # Diff matching pair of RC and testrunner_client's files
-    out = binary_output(['diff', '-w', '-I', "'!.*'", rc_location + 'rc.s',test_dir + outFile])
+    #out = binary_output(['diff', '-w', '-I', "'!.*'", rc_location + 'rc.s',test_dir + outFile])
+    out = binary_output(['diff', '-w', rc_location + 'rc.s',test_dir + outFile])
 
     # If diff exists, generate error output
     if len(out) > 0: 
