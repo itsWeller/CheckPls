@@ -16,9 +16,16 @@ global fail_count
 fail_count  = 0
 total_count = 0;
 
-# Option defaults to be set by optparse
-test_dir    = './' + argv[1] + '/'
-rc_location = './../cse131/'
+parser = OptionParser()
+parser.add_option('-t','--test-folder',dest='test_dir',help='directory containing .rc tests', default='tests/')
+parser.add_option('-r','--rc-location',dest='rc_location',help='directory containing RC binary', default='./')
+parser.add_option('-f',dest='generate_requested', action='store_true', help='flag to force regeneration of testrunner_client .s files',default=False)
+
+(options, args) = parser.parse_args()
+
+# Option set by optparse
+test_dir = options.test_dir if '/' in options.test_dir[-1:] else options.test_dir + '/'
+rc_location = options.rc_location if '/' in options.rc_location[-1:] else options.rc_location + '/'
 
 error = False
 
@@ -48,9 +55,15 @@ def compile_check(output, error):
 
 # Execute command
 def binary_output(opts, cwd='.'):
-    p = subprocess.Popen(opts, stdout=subprocess.PIPE, cwd=cwd)
-    s = p.communicate()[0]
-    return s
+    try:
+        p = subprocess.Popen(opts, stdout=subprocess.PIPE, cwd=cwd)
+        s = p.communicate()[0]
+        return s
+    except OSError as e:
+        print FAIL + "Error executing command. Are you trying to generate testrunner_client's .s files offline?" + ENDC
+        print 'Check directory settings. Exiting...'
+        exit()
+
 
 # Print score/footer
 def print_footer():
@@ -78,7 +91,7 @@ for rc_file in [test for test in os.listdir(test_dir) if '.rc' in test]:
     outFile = filePref  + '.s'
 
     # Generate testrunner_client's solution files if not already present
-    if not(outFile in os.listdir(test_dir)):
+    if not(outFile in os.listdir(test_dir)) or options.generate_requested:
         print '\t' + outFile + ' missing, generating...'
         if not compile_check(binary_output(['testrunner_client', test_dir]), False): continue
 
