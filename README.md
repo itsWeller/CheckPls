@@ -13,12 +13,7 @@ Only tested on OS X / *Nix, but it should work on Windows with some tweaking.
 This depends on your code generator having the same logical structure as TRC's. You may 
 generate perfectly valid and correct assembly and have this script reject you - don't take it personally. 
 
-## Arguements 
-chrisweller at air in ~/Workspace/checkPls on master
-± python checkPls.py -h
-Usage: checkPls.py [options]
-
-Options and Defaults:
+## Arguement Options and Defaults:
 ``` sh
 chrisweller at air in ~/Workspace/checkPls on master
 ± python checkPls.py -h
