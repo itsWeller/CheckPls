@@ -17,9 +17,14 @@ fail_count  = 0
 total_count = 0;
 
 parser = OptionParser()
-parser.add_option('-t','--test-folder',dest='test_dir',help='directory containing .rc tests', default='tests/')
-parser.add_option('-r','--rc-location',dest='rc_location',help='directory containing RC binary', default='./')
-parser.add_option('-f',dest='generate_requested', action='store_true', help='flag to force regeneration of testrunner_client .s files',default=False)
+parser.add_option('-t','--test-folder',dest='test_dir',
+  help='directory containing .rc tests', default='tests/')
+parser.add_option('-r','--rc-location',dest='rc_location',
+  help='directory containing RC binary', default='./')
+parser.add_option('-f',dest='generate_requested', action='store_true', 
+  help='flag to force regeneration of testrunner_client .s files',default=False)
+parser.add_option('-s','--single-file',dest='single_requested',
+  help='process single test', default=None)
 
 (options, args) = parser.parse_args()
 
@@ -30,9 +35,10 @@ rc_location = options.rc_location if '/' in options.rc_location[-1:] else option
 error = False
 
 # Remove comments, generated dialog, and extra lines
-def sanitize_file(path):
-    return [line for line in open(path).read().split('\n') 
-      if not (line.strip() == '') and not ('!' in line) and not ('*' in line)]
+def generate_clean(src, dest):
+    f = open(dest, 'w+')
+    f.write('\n'.join([line for line in open(src).read().split('\n') if not (line.strip() == '') and not ('!' in line) and not ('*' in line)] + ['\n']))
+    f.close()
 
 # Write list to file
 def list2file(path, contents):
@@ -43,13 +49,15 @@ def list2file(path, contents):
 
 # Generate success/failure dialog
 def determine_output(error):
-    print '[' + rc_file + ']: ' + ((FAIL + 'Failure.' + ENDC) if error else (PASS + 'Passed!' + ENDC))
+    print '[' + rc_file + ']: ' + ((FAIL + 'Failure.' + ENDC) if error 
+      else (PASS + 'Passed!' + ENDC))
     error = False
 
 # Determine if valid test and ./RC output is valid
 def compile_check(output, error):
     if 'Compile: failure.' in output:
-        print '[' + rc_file + ']: ' + ('Bad test, WNBT. Continuing...' if not error else 'Yo shit fukt. Skipping.')
+        print '[' + rc_file + ']: ' + ('Bad test, WNBT. Continuing...' 
+          if not error else 'Yo shit fukt. Skipping.')
         return False
     return True
 
@@ -85,27 +93,39 @@ def generate_error(line):
             line = linePre + ': ' +  linePost.lstrip()
             print (THEM + '\t' + line + ENDC) if 'TR' in line else (US + '\t' + line + ENDC) 
 
+
+
 # Gather all the *.rc files in the test directory
-for rc_file in [test for test in os.listdir(test_dir) if '.rc' in test]:
+
+rc_file_list = [options.single_requested] if options.single_requested else [rc_file for rc_file in [test for test in os.listdir(test_dir) if '.rc' in test]]
+
+
+for rc_file in rc_file_list:
+
     filePref = rc_file[0:rc_file.find('.')]
     outFile = filePref  + '.s'
+    cleanFile = outFile + '.clean'
 
     # Generate testrunner_client's solution files if not already present
     if not(outFile in os.listdir(test_dir)) or options.generate_requested:
         print '-- [' + outFile + '] missing, generating...'
-        if not compile_check(binary_output(['testrunner_client', test_dir + rc_file]), False): continue
+        if not compile_check(binary_output(['testrunner_client', test_dir + rc_file], rc_location), False): 
+            continue
 
         # Write generated files
-        copyfile('rc.s', test_dir + outFile)
-        list2file(test_dir + outFile, sanitize_file(test_dir + outFile) + ['\n'])
+        copyfile(rc_location + 'rc.s', test_dir + outFile)
+
+    if not(cleanFile in os.listdir(test_dir)) or options.generate_requested:
+        print '-- [' + cleanFile + '] missing, generating...'
+        generate_clean(test_dir + outFile, test_dir + cleanFile)
 
     # Always generate and write user's RC .s files
     if not compile_check(binary_output([rc_location + 'RC', test_dir + rc_file], rc_location), True): continue
-    list2file(rc_location + 'rc.s', sanitize_file(rc_location + 'rc.s') + ['\n'])
+
+    generate_clean(rc_location + 'rc.s', rc_location + 'rc.s.clean')
 
     # Diff matching pair of RC and testrunner_client's files
-    #out = binary_output(['diff', '-w', '-I', "'!.*'", rc_location + 'rc.s',test_dir + outFile])
-    out = binary_output(['diff', '-w', rc_location + 'rc.s',test_dir + outFile])
+    out = binary_output(['diff', '-w', rc_location + 'rc.s.clean', test_dir + cleanFile])
 
     # If diff exists, generate error output
     if len(out) > 0: 
